@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>단어 퀴즈 챌린지</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #6366f1; /* Indigo 500 */
+            --primary-dark: #4f46e5; /* Indigo 600 */
+            --secondary-color: #facc15; /* Amber 400 */
+            --correct-color: #10b981; /* Emerald 500 */
+            --incorrect-color: #ef4444; /* Red 500 */
+            --bg-color: #f1f5f9; /* Slate 100 */
+            --card-color: #ffffff;
+            --text-color: #1f2937; /* Gray 800 */
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .quiz-container {
+            width: 100%;
+            max-width: 500px;
+            background-color: var(--card-color);
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+            text-align: center;
+        }
+        h1 {
+            color: var(--primary-color);
+            font-size: 1.75rem;
+            margin-bottom: 5px;
+            font-weight: 800;
+        }
+        .subtitle {
+            color: #6b7280; /* Gray 500 */
+            margin-bottom: 25px;
+            font-size: 1rem;
+        }
+        .score-board {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding: 10px 20px;
+            background-color: var(--bg-color);
+            border-radius: 12px;
+            font-weight: 600;
+            color: var(--text-color);
+        }
+        #word-display {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--text-color);
+            margin-bottom: 30px;
+            min-height: 60px; /* Ensure space even when empty */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: var(--secondary-color);
+            padding: 15px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+        .option-button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px 20px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 0 var(--primary-dark);
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        .option-button:hover {
+            background-color: var(--primary-dark);
+        }
+        .option-button:active {
+            box-shadow: 0 0 0 var(--primary-dark);
+            transform: translateY(4px);
+        }
+        .correct {
+            background-color: var(--correct-color);
+            box-shadow: 0 4px 0 #059669; /* Emerald 600 */
+        }
+        .incorrect {
+            background-color: var(--incorrect-color);
+            box-shadow: 0 4px 0 #dc2626; /* Red 600 */
+        }
+        .feedback-message {
+            margin-top: 20px;
+            font-size: 1.25rem;
+            font-weight: 600;
+            min-height: 30px;
+        }
+        .hidden {
+            display: none;
+        }
+        .start-button {
+            background-color: var(--correct-color);
+            box-shadow: 0 4px 0 #059669;
+            width: 100%;
+            margin-top: 20px;
+        }
+        .start-button:active {
+            box-shadow: 0 0 0 #059669;
+        }
+        /* Mobile optimization */
+        @media (min-width: 640px) {
+            .options-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="quiz-container">
+    <h1>단어 퀴즈 챌린지</h1>
+    <p class="subtitle">영어 단어의 정확한 한국어 뜻을 맞춰보세요!</p>
+
+    <div class="score-board">
+        <span>점수: <span id="score">0</span></span>
+        <span>문제: <span id="question-count">0</span> / <span id="total-questions">15</span></span>
+    </div>
+
+    <div id="game-area">
+        <div id="word-display">게임을 시작하세요!</div>
+
+        <div id="options-container" class="options-grid">
+            <button class="option-button" data-index="0" onclick="checkAnswer(this)"></button>
+            <button class="option-button" data-index="1" onclick="checkAnswer(this)"></button>
+            <button class="option-button" data-index="2" onclick="checkAnswer(this)"></button>
+            <button class="option-button" data-index="3" onclick="checkAnswer(this)"></button>
+        </div>
+
+        <div id="feedback-message" class="feedback-message"></div>
+
+        <button id="start-button" class="option-button start-button" onclick="startGame()">게임 시작</button>
+    </div>
+
+    <div id="result-area" class="hidden">
+        <h2>게임 종료!</h2>
+        <p style="font-size: 1.5rem; font-weight: 600; margin-bottom: 20px;">최종 점수: <span id="final-score">0</span>점</p>
+        <button class="option-button start-button" onclick="startGame()">다시 시작</button>
+    </div>
+</div>
+
+<script>
+    // Firebase related constants and initialization (Standard Canvas Setup)
+    // Although not strictly used for data persistence in this simple game, 
+    // we keep the Firebase initialization structure required for the environment.
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const apiKey = "";
+    // Note: Firebase services are not imported or used for this single-player game's logic.
+
+    const vocabulary = [
+        // 기존 20개 단어
+        { en: "diligent", kr: "부지런한" },
+        { en: "essential", kr: "필수적인" },
+        { en: "acquire", kr: "얻다, 획득하다" },
+        { en: "ambitious", kr: "야심 있는" },
+        { en: "crucial", kr: "결정적인, 중요한" },
+        { en: "innovative", kr: "혁신적인" },
+        { en: "sustain", kr: "유지하다" },
+        { en: "ultimate", kr: "궁극적인" },
+        { en: "versatile", kr: "다재다능한" },
+        { en: "resilience", kr: "회복력" },
+        { en: "perspective", kr: "관점" },
+        { en: "navigate", kr: "길을 찾다" },
+        { en: "imply", kr: "암시하다" },
+        { en: "coherent", kr: "일관성 있는" },
+        { en: "emphasize", kr: "강조하다" },
+        { en: "analyze", kr: "분석하다" },
+        { en: "component", kr: "구성 요소" },
+        { en: "contradict", kr: "모순되다" },
+        { en: "discrepancy", kr: "불일치" },
+        { en: "legitimate", kr: "합법적인" },
+        
+        // 새로 추가된 30개 단어 (총 50개)
+        { en: "anticipate", kr: "예상하다" },
+        { en: "catastrophe", kr: "대재앙" },
+        { en: "compulsory", kr: "의무적인" },
+        { en: "consequence", kr: "결과" },
+        { en: "demonstrate", kr: "입증하다" },
+        { en: "distinct", kr: "별개의, 독특한" },
+        { en: "eligible", kr: "자격이 있는" },
+        { en: "exaggerate", kr: "과장하다" },
+        { en: "implement", kr: "실행하다" },
+        { en: "indifferent", kr: "무관심한" },
+        { en: "mandatory", kr: "필수적인" },
+        { en: "modify", kr: "수정하다" },
+        { en: "obsolete", kr: "시대에 뒤떨어진" },
+        { en: "potential", kr: "잠재적인" },
+        { en: "prestigious", kr: "명성이 있는" },
+        { en: "restrict", kr: "제한하다" },
+        { en: "sufficient", kr: "충분한" },
+        { en: "transform", kr: "변형시키다" },
+        { en: "undertake", kr: "착수하다" },
+        { en: "vulnerable", kr: "취약한" },
+        { en: "integrate", kr: "통합하다" },
+        { en: "sophisticated", kr: "정교한" },
+        { en: "inevitable", kr: "피할 수 없는" },
+        { en: "allocate", kr: "할당하다" },
+        { en: "profound", kr: "심오한" },
+        { en: "compromise", kr: "타협하다" },
+        { en: "contemporary", kr: "현대의" },
+        { en: "dedicate", kr: "헌신하다" },
+        { en: "expertise", kr: "전문 지식" },
+        { en: "facilitate", kr: "용이하게 하다" },
+        { en: "generate", kr: "생성하다" },
+        { en: "hypothesize", kr: "가설을 세우다" },
+        { en: "integrity", kr: "진실성, 완전성" },
+        { en: "marginal", kr: "미미한" },
+        { en: "optimize", kr: "최적화하다" },
+        { en: "perceive", kr: "인지하다" },
+        { en: "substitute", kr: "대체하다" } 
+    ];
+
+    const TOTAL_QUESTIONS = 15;
+
+    let gameData = {
+        shuffledVocab: [],
+        currentQuestionIndex: 0,
+        score: 0,
+        correctAnswer: ""
+    };
+
+    // DOM Elements
+    const wordDisplay = document.getElementById('word-display');
+    const optionButtons = Array.from(document.getElementById('options-container').children);
+    const scoreElement = document.getElementById('score');
+    const questionCountElement = document.getElementById('question-count');
+    const totalQuestionsElement = document.getElementById('total-questions');
+    const feedbackMessage = document.getElementById('feedback-message');
+    const startButton = document.getElementById('start-button');
+    const gameArea = document.getElementById('game-area');
+    const resultArea = document.getElementById('result-area');
+    const finalScoreElement = document.getElementById('final-score');
+
+    totalQuestionsElement.textContent = TOTAL_QUESTIONS;
+
+    // Utility function to shuffle an array
+    function shuffleArray(array) {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [array[i], array[j]] = [array[j], array[i]];
+        }
+        return array;
+    }
+
+    // Function to start a new game
+    function startGame() {
+        // Reset game state
+        gameData.score = 0;
+        gameData.currentQuestionIndex = 0;
+        gameData.shuffledVocab = shuffleArray([...vocabulary]).slice(0, TOTAL_QUESTIONS);
+        
+        // Update UI visibility
+        gameArea.classList.remove('hidden');
+        resultArea.classList.add('hidden');
+        startButton.classList.add('hidden');
+        document.getElementById('options-container').classList.remove('hidden');
+
+        // Clear feedback and reset buttons
+        feedbackMessage.textContent = "";
+        optionButtons.forEach(btn => {
+            btn.disabled = false;
+            btn.classList.remove('correct', 'incorrect');
+        });
+
+        updateScoreDisplay();
+        loadNewQuestion();
+    }
+
+    // Function to update score and question count display
+    function updateScoreDisplay() {
+        scoreElement.textContent = gameData.score;
+        questionCountElement.textContent = gameData.currentQuestionIndex;
+    }
+
+    // Function to load a new question
+    function loadNewQuestion() {
+        if (gameData.currentQuestionIndex >= TOTAL_QUESTIONS) {
+            endGame();
+            return;
+        }
+
+        // Get the current word object
+        const currentWord = gameData.shuffledVocab[gameData.currentQuestionIndex];
+        gameData.correctAnswer = currentWord.kr;
+
+        // Display the English word
+        wordDisplay.textContent = currentWord.en;
+
+        // Prepare the options array
+        const correctOption = currentWord.kr;
+        
+        // Filter out the current word from all words to select incorrect options
+        const incorrectOptionsPool = vocabulary
+            .filter(item => item.en !== currentWord.en) // Exclude the current word itself
+            .map(item => item.kr); // Map to just the Korean meanings
+        
+        // Shuffle the pool and take the first 3 as incorrect options
+        const shuffledPool = shuffleArray(incorrectOptionsPool);
+        let options = [correctOption, ...shuffledPool.slice(0, 3)];
+
+        // Randomly shuffle the final 4 options
+        options = shuffleArray(options);
+
+        // Update button text and reset styles
+        optionButtons.forEach((btn, index) => {
+            btn.textContent = options[index];
+            btn.disabled = false;
+            btn.classList.remove('correct', 'incorrect');
+            btn.style.opacity = 1;
+            btn.onclick = () => checkAnswer(btn); // Re-assign click handler
+        });
+        
+        // Clear previous feedback
+        feedbackMessage.textContent = "";
+        updateScoreDisplay();
+    }
+
+    // Function to handle answer checking
+    function checkAnswer(selectedButton) {
+        const selectedAnswer = selectedButton.textContent;
+        const isCorrect = selectedAnswer === gameData.correctAnswer;
+
+        // Disable all buttons to prevent multiple clicks
+        optionButtons.forEach(btn => btn.disabled = true);
+
+        if (isCorrect) {
+            gameData.score++;
+            selectedButton.classList.add('correct');
+            feedbackMessage.textContent = "정답입니다! 🎉";
+        } else {
+            selectedButton.classList.add('incorrect');
+            feedbackMessage.textContent = `오답입니다. 정답은: ${gameData.correctAnswer} 😥`;
+            
+            // Highlight the correct answer
+            optionButtons.find(btn => btn.textContent === gameData.correctAnswer)?.classList.add('correct');
+        }
+
+        // Move to the next question after a brief delay
+        gameData.currentQuestionIndex++;
+        setTimeout(() => {
+            loadNewQuestion();
+        }, 1500); // 1.5 seconds delay
+    }
+
+    // Function to handle the end of the game
+    function endGame() {
+        wordDisplay.textContent = "퀴즈 완료!";
+        document.getElementById('options-container').classList.add('hidden');
+        feedbackMessage.textContent = "수고하셨습니다!";
+
+        finalScoreElement.textContent = gameData.score;
+        gameArea.classList.add('hidden');
+        resultArea.classList.remove('hidden');
+    }
+    
+    // Initial setup when the page loads
+    window.onload = function() {
+        // Hide the options initially, show the start button
+        document.getElementById('options-container').classList.add('hidden');
+        startButton.classList.remove('hidden');
+        // Pre-fill total questions
+        totalQuestionsElement.textContent = TOTAL_QUESTIONS; 
+    };
+
+</script>
+</body>
+</html>
